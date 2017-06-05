@@ -13,6 +13,7 @@ namespace ColumnService
         private double _yield = 0;
         private double _x_coord = 0;
         private double _y_coord = 0;
+        private double _force = 0;
         private double _ultimate_stress;
         private double _service_stress;
         private bool _service = true;
@@ -38,6 +39,8 @@ namespace ColumnService
                 _yield = value;
             }
         }
+        public double Force { get; internal set; }
+        public double Stress { get; internal set; }
         public double X_Coordinate
         {
             get

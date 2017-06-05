@@ -11,12 +11,13 @@ namespace ColumnService
         public double ReinforcingArea;
         public double ReinforcingFirstMoment;
         public double ReinforcingCG;
+        public double ReinforcingForce;
         public double ReinforcingInertia;
+        public double ReinforcingMoment;
         public virtual double GrossArea{get; protected set;}
         public List<Reinforcing> Reinforcing = new List<Reinforcing>();
         
-
-
+        
         protected void calcReinf()
         {
             double _area = 0;
