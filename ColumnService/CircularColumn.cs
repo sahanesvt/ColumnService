@@ -6,131 +6,14 @@ using System.Threading.Tasks;
 
 namespace ColumnService
 {
-    internal class CircularSegment
-    {
-        private double _radius = 0;
-        private double _area = 0;
-        private double _CG = 0;
-        private double _theta = 0;
-        private double _cracked_I = 0;
-        private double _compressionDepth = 0;
-        
-        private void _calc_theta(double radius, double compressionDepth)
-        {
-            _theta = 2 * Math.Acos((radius - compressionDepth) / radius);
-        }
-        private void _calc_theta(double compressionDepth)
-        {
-            _calc_theta(_radius, compressionDepth);
-        }
-
-        private void _calc_area(double radius,double compressionDepth)
-        {
-            _calc_theta(radius, compressionDepth);
-            _area = 0.5 * Math.Pow(radius, 2) * (_theta - Math.Sin(_theta));
-        }
-        private void _calc_area(double compressionDepth)
-        {
-            _calc_area(_radius, compressionDepth);
-        }
-
-        private void _calc_CG(double radius, double compressionDepth)
-        {
-            _calc_theta(radius, compressionDepth);
-            _CG = 4 * radius * Math.Pow(Math.Sin(0.5 * _theta), 3) / (3 * (_theta - Math.Sin(_theta)));
-        }
-        private void _calc_CG(double compressionDepth)
-        {
-            _calc_CG(_radius,compressionDepth);
-        }
-
-        private void _calc_cracked_I(double radius,double compressionDepth)
-        {
-            _calc_theta(radius, compressionDepth);
-            _cracked_I = Math.Pow(radius, 4) / 8 * (_theta - Math.Sin(_theta) + 2 * Math.Sin(_theta) * Math.Pow(Math.Sin(_theta / 2), 2)) - _area * Math.Pow(_CG, 2);
-        }
-        private void _calc_cracked_I(double compressionDepth)
-        {
-            _calc_cracked_I(_radius, compressionDepth);
-        }
-
-        
-        public double Area = 0;
-        public double CG = 0;
-        public double Cracked_I = 0;
-        public double Radius
-        {
-            get
-            {
-                return _radius;
-            }
-            set
-            {
-                _radius = value;
-                _calc_area(_compressionDepth);
-                _calc_CG(_compressionDepth);
-                _calc_cracked_I(_compressionDepth);
-
-                Area = _area;
-                CG = _CG;
-                Cracked_I = _cracked_I;
-            }
-        }
-        public double CompressionDepth
-        {
-            get
-            {
-                return _compressionDepth;
-            }
-            set
-            {
-                _compressionDepth = value;
-                _calc_area(_compressionDepth);
-                _calc_CG(_compressionDepth);
-                _calc_cracked_I(_compressionDepth);
-
-                Area = _area;
-                CG = _CG;
-                Cracked_I = _cracked_I;
-            }
-        }
-
-        public CircularSegment(double radius, double compressionDepth)
-        {
-            _compressionDepth = compressionDepth;
-            _radius = radius;
-            _calc_area(_compressionDepth);
-            _calc_CG(_compressionDepth);
-            _calc_cracked_I(_compressionDepth);
-
-            Area = _area;
-            CG = _CG;
-            Cracked_I = _cracked_I;
-        }
-        public CircularSegment()
-        {
-            _calc_area(_compressionDepth);
-            _calc_CG(_compressionDepth);
-            _calc_cracked_I(_compressionDepth);
-
-            Area = _area;
-            CG = _CG;
-            Cracked_I = _cracked_I;
-        }
-
-        public double Force(double stress)
-        {
-            return _area * stress;
-        }
-
-    }
+    
 
     public class CircularColumn: Column
     {
         private double _radius = 0;
         private double _gross_area = 0;
         private double _cracked_NA = 0;
-        private double _effective_NA = 0;
+        //private double _effective_NA = 0;
         private double _cracked_moment_of_inertia = 0;
         private double _service_concrete_stress = 0;
         private double[,] _concrete_service_force_and_CG = new double[1, 3];
@@ -178,44 +61,32 @@ namespace ColumnService
 
         }
 
-        private void _calc_service_concrete_stress(double axial, double moment,double modRatio)
-        {
-            _calc_service_NA(modRatio);
-            _calc_cracked_moment_of_inertia(modRatio);
-            _service_concrete_stress = moment * 12 * (_cracked_NA- _radius) / _cracked_moment_of_inertia / modRatio;
-            _effective_NA = (axial / (ReinforcingArea + GrossArea / modRatio) + _service_concrete_stress) / _service_concrete_stress * _cracked_NA;
-            double reinfForce = 0;
-            double reinfMoment = 0;
-            int count=0;
-            foreach(Reinforcing reinforcing in Reinforcing)
-            {
-                reinforcing.Stress = (axial / (ReinforcingArea + GrossArea / modRatio)) + moment * 12 * (_cracked_NA - reinforcing.Y_Coordinate) / _cracked_moment_of_inertia;
-                reinforcing.Force = reinforcing.Area * reinforcing.Stress;
-                reinfForce += reinforcing.Force;
-                reinfMoment += reinforcing.Force * reinforcing.Y_Coordinate / 12;
-                count++;
-            }
-            ReinforcingForce = reinfForce;
-            ReinforcingMoment = reinfMoment;
-        }
-
-        private void _calc_service_concrete_stress(double moment, double modRatio)
-        {
-            _calc_service_concrete_stress(0, moment, modRatio);
-        }
-
         private void _calc_cracked_moment_of_inertia(double modRatio)
         {
-            _calc_service_NA(modRatio);
-            CircularSegment compressionBlock = new CircularSegment(_radius, _radius -_cracked_NA);
+            //_calc_service_NA(modRatio);
+            CircularSegment compressionBlock = new CircularSegment(_radius, _radius - _cracked_NA);
             this.calcReinf();
-            _cracked_moment_of_inertia = ReinforcingInertia + ReinforcingArea * Math.Pow((_cracked_NA - ReinforcingCG), 2) + 
-                (compressionBlock.Cracked_I + compressionBlock.Area * Math.Pow(_cracked_NA - compressionBlock.CG, 2))/modRatio;
+            _cracked_moment_of_inertia = ReinforcingInertia + ReinforcingArea * Math.Pow((_cracked_NA - ReinforcingCG), 2) +
+                (compressionBlock.Cracked_I + compressionBlock.Area * Math.Pow(_cracked_NA - compressionBlock.CG, 2)) / modRatio;
+        }
+
+        private void _calc_service_stresses(double axial, double moment,double modRatio)
+        {
+            _service_concrete_stress =  moment * 12 * (_cracked_NA- _radius) / _cracked_moment_of_inertia / modRatio;
+            _reinforcing_terms(_radius, _cracked_NA, _service_concrete_stress, modRatio, Reinforcing);
+        }
+        private void _calc_service_stresses(double moment, double modRatio)
+        {
+            _calc_service_stresses(0, moment, modRatio);
         }
 
         private void _calc_concrete_service_force_and_CG(double axial, double moment, double modRatio)
         {
-            _calc_service_concrete_stress(moment, modRatio);
+            _concrete_service_force_and_CG =_concrete_service_terms(_radius, _cracked_NA, _service_concrete_stress, 100);
+        }
+        /*private void _calc_concrete_service_force_and_CG(double axial, double moment, double modRatio)
+        {
+            //_calc_service_concrete_stress(axial, moment, modRatio);
             CircularSegment compressionBlock = new CircularSegment();
             compressionBlock.Radius = _radius;
             int increments = 100;
@@ -234,14 +105,76 @@ namespace ColumnService
             _concrete_service_force_and_CG[0, 0] = force;
             _concrete_service_force_and_CG[0, 1] = firstMoment / force;
             _concrete_service_force_and_CG[0, 2] = firstMoment/12;
-        }
-
+        }*/
         private void _calc_concrete_service_force_and_CG(double moment, double modRatio)
         {
             _calc_concrete_service_force_and_CG(0, moment, modRatio);
         }
 
+        private double[,] _service_forces(double radius, List<Reinforcing> reinforcing, double modRatio, double neutralAxis, double stress)
+        {
+            _reinforcing_terms(radius, neutralAxis, stress, modRatio, reinforcing);
+            double[,] concrete_terms = _concrete_service_terms(radius, neutralAxis, stress, 100);
+            double[,] forceAndMoment = new double[1,2];
+            forceAndMoment[0, 0] = concrete_terms[0, 0];
+            forceAndMoment[0, 1] = concrete_terms[0, 2];
+            forceAndMoment[1, 0] = ReinforcingForce;
+            forceAndMoment[1, 1] = ReinforcingMoment;
 
+            return forceAndMoment;
+        }
+
+        private void _reinforcing_terms(double radius, double neutralAxis, double stress, double modRatio, List<Reinforcing> reinforcing)
+        {
+            double reinfForce = 0;
+            double reinfMoment = 0;
+            stress *= modRatio;
+            int count = 0;
+            foreach (Reinforcing reinf in reinforcing)
+            {
+                reinf.Stress = stress * ((reinf.Y_Coordinate-neutralAxis) / (radius - neutralAxis));
+                reinf.Force = reinf.Area * reinf.Stress;
+                reinfForce += reinf.Force;
+                reinfMoment += reinf.Force * reinf.Y_Coordinate / 12;
+                count++;
+            }
+            ReinforcingForce = reinfForce;
+            ReinforcingMoment = reinfMoment;
+        }
+        private double[,] _concrete_service_terms(double radius, double neutralAxis, double stress, int increments)
+        {
+            CircularSegment compressionBlock = new CircularSegment();
+            compressionBlock.Radius = radius;
+            double stressIncrement = stress / increments;
+            double compressionDepthIncrement = (radius - neutralAxis) / increments;
+            double force = 0;
+            double firstMoment = 0;
+            double[,] outputTerms = new double[1, 3];
+
+            for (int i = 0; i < increments; i++)
+            {
+                compressionBlock.CompressionDepth = (radius - neutralAxis) - compressionDepthIncrement * (i + 0.5);
+                force += compressionBlock.Area * stressIncrement;
+                firstMoment += compressionBlock.Area * compressionBlock.CG * stressIncrement;
+            }
+            outputTerms[0, 0] = force;
+            outputTerms[0, 1] = firstMoment / force;
+            outputTerms[0, 2] = firstMoment / 12;
+            return outputTerms;
+        }
+
+        private void _calc_moment_and_axial(double concreteStress, double cracked_NA)
+        {
+
+        }
+
+        private void _calc_all(double axial, double moment, double modRatio)
+        {
+            _calc_service_NA(modRatio);
+            _calc_cracked_moment_of_inertia(modRatio);
+            _calc_service_stresses(axial, moment, modRatio);
+            _calc_concrete_service_force_and_CG(axial, moment, modRatio);
+        }
 
         public double Radius
         {
@@ -279,45 +212,45 @@ namespace ColumnService
 
         public double ServiceConcreteStress(double axial, double moment,double modRatio)
         {
-            _calc_service_concrete_stress(axial,moment, modRatio);
+            _calc_all(axial,moment, modRatio);
             return _service_concrete_stress;
         }
         public double ServiceConcreteStress(double moment, double modRatio)
         {
-            _calc_service_concrete_stress(moment, modRatio);
+            _calc_all(0,moment, modRatio);
             return _service_concrete_stress;
         }
 
         public double ServiceConcreteForce(double axial, double moment, double modRatio)
         {
-            _calc_concrete_service_force_and_CG(axial, moment, modRatio);
+            _calc_all(axial, moment, modRatio);
             return _concrete_service_force_and_CG[0,0];
         }
         public double ServiceConcreteForce(double moment, double modRatio)
         {
-            _calc_concrete_service_force_and_CG(moment, modRatio);
+            _calc_all(0,moment, modRatio);
             return _concrete_service_force_and_CG[0, 0];
         }
 
         public double ServiceConcreteCG(double axial, double moment, double modRatio)
         {
-            _calc_concrete_service_force_and_CG(axial, moment, modRatio);
+            _calc_all(axial, moment, modRatio);
             return _concrete_service_force_and_CG[0, 1];
         }
         public double ServiceConcreteCG(double moment, double modRatio)
         {
-            _calc_concrete_service_force_and_CG(moment, modRatio);
+            _calc_all(0,moment, modRatio);
             return _concrete_service_force_and_CG[0, 1];
         }
 
         public double ServiceConcreteMoment(double axial, double moment, double modRatio)
         {
-            _calc_concrete_service_force_and_CG(axial, moment, modRatio);
+            _calc_all(axial, moment, modRatio);
             return _concrete_service_force_and_CG[0, 2]+ReinforcingMoment;
         }
         public double ServiceConcreteMoment(double moment, double modRatio)
         {
-            _calc_concrete_service_force_and_CG(moment, modRatio);
+            _calc_all(0,moment, modRatio);
             return _concrete_service_force_and_CG[0, 2] + ReinforcingMoment;
         }
     }

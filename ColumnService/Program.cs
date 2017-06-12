@@ -10,11 +10,16 @@ namespace ColumnService
     {
         static void Main(string[] args)
         {
-            CircularColumn column = new CircularColumn(21);
+            double _radius = 21;
+            double _clear = 3.625;
+            double _axial = 500*0;
+            double _moment = 900;
+
+            CircularColumn column = new CircularColumn(_radius);
 
             double[,] _reinforcing = new double[22,2];
             _reinforcing[0, 0] = 0;
-            _reinforcing[0, 1] = 21-3.625;
+            _reinforcing[0, 1] = _radius - _clear;
             column.Reinforcing.Add(new Reinforcing(1.56, _reinforcing[0, 0], _reinforcing[0, 1], 60));
 
             for (int i =1; i<22; i++)
@@ -27,11 +32,11 @@ namespace ColumnService
 
             Console.WriteLine(column.Service_NA(8));
             Console.WriteLine(column.CrackedMomentOfInertia(8));
-            Console.WriteLine(column.ServiceConcreteStress(200,900,8));
-            Console.WriteLine(column.ServiceConcreteForce(200,900, 8));
-            Console.WriteLine(column.ServiceConcreteCG(200,900, 8));
+            Console.WriteLine(column.ServiceConcreteStress(_axial,_moment,8));
+            Console.WriteLine(column.ServiceConcreteForce(_axial, _moment, 8));
+            Console.WriteLine(column.ServiceConcreteCG(_axial, _moment, 8));
             Console.WriteLine(column.ReinforcingForce);
-            Console.WriteLine(Math.Round(column.ServiceConcreteMoment(200,900, 8),2));
+            Console.WriteLine(Math.Round(column.ServiceConcreteMoment(_axial, _moment, 8),2));
             Console.ReadLine();
 
         }

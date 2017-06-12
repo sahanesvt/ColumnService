@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CircularColumn.cs" />
+    <Compile Include="CircularSegment.cs" />
     <Compile Include="Column.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
