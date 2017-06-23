@@ -12,7 +12,7 @@ namespace ColumnService
         {
             double _radius = 21;
             double _clear = 3.625;
-            double _axial = 500*0;
+            double _axial = 500*1;
             double _moment = 900;
 
             CircularColumn column = new CircularColumn(_radius);

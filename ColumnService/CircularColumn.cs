@@ -18,17 +18,17 @@ namespace ColumnService
         private double _service_concrete_stress = 0;
         private double[,] _concrete_service_force_and_CG = new double[1, 3];
 
-        private void _calc_properties(double radius)
+        private void _calc_properties(double radius) //calculate  gross area
         {
             _gross_area = Math.Pow(radius, 2) * Math.PI;
             GrossArea = _gross_area;
         }
-        private void _calc_properties()
+        private void _calc_properties() //calculate  gross area
         {
             _calc_properties(_radius);
         }
 
-        private void _calc_service_NA(double modRatio)
+        private void _calc_service_NA(double modRatio) //calculate neutral axis without axial load
         {
             this.calcReinf();
             double crackedNA = 0;
@@ -68,13 +68,13 @@ namespace ColumnService
             this.calcReinf();
             _cracked_moment_of_inertia = ReinforcingInertia + ReinforcingArea * Math.Pow((_cracked_NA - ReinforcingCG), 2) +
                 (compressionBlock.Cracked_I + compressionBlock.Area * Math.Pow(_cracked_NA - compressionBlock.CG, 2)) / modRatio;
-        }
+        } //calculate moment of inertia without axial load
 
-        private void _calc_service_stresses(double axial, double moment,double modRatio)
+        private void _calc_service_stresses(double axial, double moment,double modRatio) //need to handle axial
         {
             _service_concrete_stress =  moment * 12 * (_cracked_NA- _radius) / _cracked_moment_of_inertia / modRatio;
             _reinforcing_terms(_radius, _cracked_NA, _service_concrete_stress, modRatio, Reinforcing);
-        }
+        } 
         private void _calc_service_stresses(double moment, double modRatio)
         {
             _calc_service_stresses(0, moment, modRatio);
@@ -124,7 +124,7 @@ namespace ColumnService
             return forceAndMoment;
         }
 
-        private void _reinforcing_terms(double radius, double neutralAxis, double stress, double modRatio, List<Reinforcing> reinforcing)
+        private void _reinforcing_terms(double radius, double neutralAxis, double stress, double modRatio, List<Reinforcing> reinforcing) //calculate total reinforcing force and moment
         {
             double reinfForce = 0;
             double reinfMoment = 0;
@@ -141,7 +141,7 @@ namespace ColumnService
             ReinforcingForce = reinfForce;
             ReinforcingMoment = reinfMoment;
         }
-        private double[,] _concrete_service_terms(double radius, double neutralAxis, double stress, int increments)
+        private double[,] _concrete_service_terms(double radius, double neutralAxis, double stress, int increments) //calculate total concrete force, moment and CG
         {
             CircularSegment compressionBlock = new CircularSegment();
             compressionBlock.Radius = radius;
@@ -157,16 +157,11 @@ namespace ColumnService
                 force += compressionBlock.Area * stressIncrement;
                 firstMoment += compressionBlock.Area * compressionBlock.CG * stressIncrement;
             }
-            outputTerms[0, 0] = force;
-            outputTerms[0, 1] = firstMoment / force;
-            outputTerms[0, 2] = firstMoment / 12;
+            outputTerms[0, 0] = force; //total concrete force
+            outputTerms[0, 1] = firstMoment / force; // concrete force CG
+            outputTerms[0, 2] = firstMoment / 12; //total concrete force moment
             return outputTerms;
-        }
-
-        private void _calc_moment_and_axial(double concreteStress, double cracked_NA)
-        {
-
-        }
+        } 
 
         private void _calc_all(double axial, double moment, double modRatio)
         {
